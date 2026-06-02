@@ -1,4 +1,5 @@
-import { GraduationCap, Target, Eye, Users } from "lucide-react";
+import { Target, Eye } from "lucide-react";
+import Image from "next/image";
 import { SCHOOL_INFO } from "@/lib/constants";
 
 export default function AboutPage() {
@@ -56,16 +57,24 @@ export default function AboutPage() {
         </div>
 
         {/* Principal */}
-        <div className="mt-14 bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
-          <div className="flex items-start gap-6">
-            <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
-              <GraduationCap size={28} className="text-primary-600" />
+        <div className="mt-14 bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-0">
+            {/* Photo */}
+            <div className="relative w-full sm:w-56 h-64 sm:h-auto flex-shrink-0">
+              <Image
+                src="/principal.jpg"
+                alt="Ms. Mansi Sharma — Principal"
+                fill
+                className="object-cover object-top"
+                priority
+              />
             </div>
-            <div>
-              <p className="text-sm text-primary-600 font-medium uppercase tracking-wider mb-1">Principal&apos;s Message</p>
-              <h3 className="text-xl font-bold text-gray-900 mb-1">{SCHOOL_INFO.principal}</h3>
-              <p className="text-sm text-gray-400 mb-4">Principal, S.D.M. Academy Shaulana</p>
-              <p className="text-gray-600 leading-relaxed italic">
+            {/* Message */}
+            <div className="p-7 sm:p-8">
+              <p className="text-sm text-primary-600 font-semibold uppercase tracking-wider mb-2">Principal&apos;s Message</p>
+              <h3 className="text-2xl font-bold text-gray-900 mb-0.5">{SCHOOL_INFO.principal}</h3>
+              <p className="text-sm text-gray-400 mb-5">Principal, S.D.M. Academy Shaulana</p>
+              <p className="text-gray-600 leading-relaxed italic text-base">
                 &ldquo;At S.D.M. Academy, we believe every child carries the light of potential within them.
                 Our role as educators is to fan that flame — through dedicated teaching, a safe and
                 encouraging environment, and by instilling values that go beyond textbooks.

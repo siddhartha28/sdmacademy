@@ -1,4 +1,5 @@
-import { GraduationCap, Users } from "lucide-react";
+import { Users } from "lucide-react";
+import Image from "next/image";
 
 export default function FacultyPage() {
   return (
@@ -27,8 +28,13 @@ export default function FacultyPage() {
         {/* Principal card */}
         <div className="max-w-sm mx-auto">
           <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm text-center">
-            <div className="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <GraduationCap size={32} className="text-primary-600" />
+            <div className="relative w-28 h-28 mx-auto mb-4">
+              <Image
+                src="/principal.jpg"
+                alt="Ms. Mansi Sharma — Principal"
+                fill
+                className="rounded-full object-cover object-top border-4 border-primary-100 shadow"
+              />
             </div>
             <h3 className="font-bold text-gray-900 text-lg">Ms. Mansi Sharma</h3>
             <p className="text-primary-600 font-medium text-sm mt-1">Principal</p>
