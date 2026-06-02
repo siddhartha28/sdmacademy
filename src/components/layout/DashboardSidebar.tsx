@@ -4,7 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Users, ClipboardList, BookOpen,
-  DollarSign, Bell, Image, Settings, LogOut, UserCheck, BarChart3, X,
+  DollarSign, Bell, Image, Settings, LogOut, UserCheck,
+  BarChart3, X, FileText, Calendar, MessageSquare,
+  FolderOpen, BookMarked, CalendarClock, Award,
 } from "lucide-react";
 import NextImage from "next/image";
 import { cn } from "@/lib/utils";
@@ -45,15 +47,29 @@ function NavItem({
   );
 }
 
+function SectionLabel({ label }: { label: string }) {
+  return (
+    <p className="px-2 pt-1 pb-0.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">{label}</p>
+  );
+}
+
+function Divider() {
+  return <div className="my-1.5 border-t border-gray-100" />;
+}
+
 export default function DashboardSidebar({ user, onClose }: SidebarProps) {
   const pathname = usePathname();
   const isAdmin = user.role === "ADMIN" || user.role === "PRINCIPAL";
   const isPrincipal = user.role === "PRINCIPAL";
+  const isTeacher = user.role === "TEACHER";
 
-  // Common admin links (Admin + Principal)
+  const active = (href: string, exact = false) =>
+    exact ? pathname === href : pathname === href || pathname.startsWith(href + "/");
+
   const adminLinks = [
     { href: "/dashboard/admin/students", label: "Students", icon: Users },
     { href: "/dashboard/admin/teachers", label: "Teachers", icon: UserCheck },
+    { href: "/dashboard/admin/assignments", label: "Teacher Assignments", icon: Award },
     { href: "/dashboard/admin/attendance", label: "Attendance", icon: ClipboardList },
     { href: "/dashboard/admin/fees", label: "Fee Management", icon: DollarSign },
     { href: "/dashboard/admin/notices", label: "Notices", icon: Bell },
@@ -61,9 +77,9 @@ export default function DashboardSidebar({ user, onClose }: SidebarProps) {
     { href: "/dashboard/admin/settings", label: "Settings", icon: Settings },
   ];
 
-  // Principal-only links
   const principalOnlyLinks = [
     { href: "/dashboard/admin/marks", label: "Marks & Results", icon: BookOpen },
+    { href: "/dashboard/admin/leave", label: "Leave Approvals", icon: CalendarClock },
   ];
 
   const principalLinks = [
@@ -71,8 +87,17 @@ export default function DashboardSidebar({ user, onClose }: SidebarProps) {
   ];
 
   const teacherLinks = [
+    { href: "/dashboard/teacher", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/dashboard/teacher/students", label: "My Students", icon: Users },
     { href: "/dashboard/teacher/attendance", label: "Attendance", icon: ClipboardList },
     { href: "/dashboard/teacher/marks", label: "Marks Entry", icon: BookOpen },
+    { href: "/dashboard/teacher/homework", label: "Homework", icon: FileText },
+    { href: "/dashboard/teacher/lesson-plans", label: "Lesson Plans", icon: BookMarked },
+    { href: "/dashboard/teacher/announcements", label: "Announcements", icon: MessageSquare },
+    { href: "/dashboard/teacher/remarks", label: "Student Remarks", icon: Award },
+    { href: "/dashboard/teacher/documents", label: "Study Material", icon: FolderOpen },
+    { href: "/dashboard/teacher/ptm", label: "PTM Slots", icon: Calendar },
+    { href: "/dashboard/teacher/leave", label: "Leave Application", icon: CalendarClock },
   ];
 
   const handleLogout = async () => {
@@ -105,56 +130,40 @@ export default function DashboardSidebar({ user, onClose }: SidebarProps) {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-1">
+      <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-0.5">
         {isPrincipal && (
           <>
-            <p className="px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Analytics</p>
+            <SectionLabel label="Analytics" />
             {principalLinks.map((link) => (
-              <NavItem
-                key={link.href}
-                {...link}
-                active={pathname === link.href}
-                onClick={onClose}
-              />
+              <NavItem key={link.href} {...link} active={active(link.href, true)} onClick={onClose} />
             ))}
-            <div className="my-2 border-t border-gray-100" />
-            <p className="px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Management</p>
+            <Divider />
+            <SectionLabel label="Management" />
           </>
         )}
 
-        {isAdmin &&
-          adminLinks.map((link) => (
-            <NavItem
-              key={link.href}
-              {...link}
-              active={pathname === link.href || pathname.startsWith(link.href + "/")}
-              onClick={onClose}
-            />
-          ))}
+        {isAdmin && adminLinks.map((link) => (
+          <NavItem key={link.href} {...link} active={active(link.href)} onClick={onClose} />
+        ))}
 
         {isPrincipal && (
           <>
-            <div className="my-2 border-t border-gray-100" />
-            <p className="px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Academics</p>
+            <Divider />
+            <SectionLabel label="Academics" />
             {principalOnlyLinks.map((link) => (
-              <NavItem
-                key={link.href}
-                {...link}
-                active={pathname === link.href || pathname.startsWith(link.href + "/")}
-                onClick={onClose}
-              />
+              <NavItem key={link.href} {...link} active={active(link.href)} onClick={onClose} />
             ))}
           </>
         )}
 
-        {user.role === "TEACHER" && (
+        {isTeacher && (
           <>
-            <p className="px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">My Tasks</p>
+            <SectionLabel label="Teacher Portal" />
             {teacherLinks.map((link) => (
               <NavItem
                 key={link.href}
                 {...link}
-                active={pathname === link.href}
+                active={link.href === "/dashboard/teacher" ? active(link.href, true) : active(link.href)}
                 onClick={onClose}
               />
             ))}

@@ -13,13 +13,22 @@ model User {
   email     String?
   password  String
   role      String   @default("TEACHER") // PRINCIPAL | ADMIN | TEACHER
-  classId   String?
+  classId   String?  // legacy — kept for compatibility
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   class               Class?               @relation(fields: [classId], references: [id])
   attendanceSubmitted Attendance[]
+  assignments         TeacherAssignment[]  @relation("TeacherAssignments")
+  homeworkCreated     Homework[]
+  lessonPlans         LessonPlan[]
+  announcements       Announcement[]
+  leaveApplications   TeacherLeave[]       @relation("TeacherLeaves")
+  substituteFor       TeacherLeave[]       @relation("SubstituteLeaves")
+  studyMaterials      StudyMaterial[]
+  ptmSlots            PTMSlot[]
+  behaviourRemarks    BehaviourRemark[]
 }
 
 model AcademicYear {
@@ -35,10 +44,16 @@ model Class {
   id       String @id @default(cuid())
   name     String @unique
   order    Int    @unique
-  sections Section[]
-  teachers User[]
-  feeStructures FeeStructure[]
-  exams    Exam[]
+
+  sections          Section[]
+  teachers          User[]
+  feeStructures     FeeStructure[]
+  exams             Exam[]
+  teacherAssignments TeacherAssignment[]
+  homework          Homework[]
+  lessonPlans       LessonPlan[]
+  announcements     Announcement[]
+  ptmSlots          PTMSlot[]
 }
 
 model Section {
@@ -70,10 +85,13 @@ model Student {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  section           Section          @relation(fields: [sectionId], references: [id])
-  attendanceRecords AttendanceRecord[]
-  marksEntries      MarksEntry[]
-  feePayments       FeePayment[]
+  section              Section           @relation(fields: [sectionId], references: [id])
+  attendanceRecords    AttendanceRecord[]
+  marksEntries         MarksEntry[]
+  feePayments          FeePayment[]
+  behaviourRemarks     BehaviourRemark[]
+  homeworkSubmissions  HomeworkSubmission[]
+  ptmSlots             PTMSlot[]
 
   @@unique([sectionId, rollNo])
 }
@@ -106,13 +124,17 @@ model AttendanceRecord {
 }
 
 model Subject {
-  id       String @id @default(cuid())
+  id       String  @id @default(cuid())
   name     String
   code     String?
-  maxMarks Int    @default(100)
+  maxMarks Int     @default(100)
   classId  String?
 
-  marksEntries MarksEntry[]
+  marksEntries       MarksEntry[]
+  teacherAssignments TeacherAssignment[]
+  homework           Homework[]
+  lessonPlans        LessonPlan[]
+  studyMaterials     StudyMaterial[]
 }
 
 model Exam {
@@ -225,7 +247,150 @@ model SchoolEvent {
 }
 
 model SchoolSettings {
-  id           String  @id @default(cuid())
-  key          String  @unique
-  value        String
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+}
+
+// ─── Teacher Portal Models ────────────────────────────────────────────────────
+
+model TeacherAssignment {
+  id             String  @id @default(cuid())
+  teacherId      String
+  classId        String
+  subjectId      String?  // null means class teacher (no specific subject)
+  isClassTeacher Boolean @default(false)
+  academicYear   String  @default("2025-26")
+  createdAt      DateTime @default(now())
+
+  teacher  User     @relation("TeacherAssignments", fields: [teacherId], references: [id])
+  class    Class    @relation(fields: [classId], references: [id])
+  subject  Subject? @relation(fields: [subjectId], references: [id])
+
+  @@unique([teacherId, classId, subjectId, academicYear])
+}
+
+model BehaviourRemark {
+  id        String   @id @default(cuid())
+  studentId String
+  teacherId String
+  remark    String
+  type      String   @default("GENERAL") // GENERAL | POSITIVE | NEGATIVE | CONDUCT
+  date      DateTime @default(now())
+
+  student Student @relation(fields: [studentId], references: [id])
+  teacher User    @relation(fields: [teacherId], references: [id])
+}
+
+model Homework {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  classId     String
+  subjectId   String
+  teacherId   String
+  dueDate     DateTime
+  createdAt   DateTime @default(now())
+
+  class       Class    @relation(fields: [classId], references: [id])
+  subject     Subject  @relation(fields: [subjectId], references: [id])
+  teacher     User     @relation(fields: [teacherId], references: [id])
+  submissions HomeworkSubmission[]
+}
+
+model HomeworkSubmission {
+  id          String    @id @default(cuid())
+  homeworkId  String
+  studentId   String
+  status      String    @default("PENDING") // PENDING | SUBMITTED | GRADED
+  marks       Float?
+  remarks     String?
+  submittedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  homework Homework @relation(fields: [homeworkId], references: [id], onDelete: Cascade)
+  student  Student  @relation(fields: [studentId], references: [id])
+
+  @@unique([homeworkId, studentId])
+}
+
+model LessonPlan {
+  id          String   @id @default(cuid())
+  teacherId   String
+  classId     String
+  subjectId   String
+  topic       String
+  description String?
+  date        DateTime
+  duration    Int?     // minutes
+  status      String   @default("PLANNED") // PLANNED | COMPLETED | SKIPPED
+  createdAt   DateTime @default(now())
+
+  teacher User    @relation(fields: [teacherId], references: [id])
+  class   Class   @relation(fields: [classId], references: [id])
+  subject Subject @relation(fields: [subjectId], references: [id])
+}
+
+model Announcement {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  authorId  String
+  scope     String   @default("CLASS") // CLASS | SCHOOL_WIDE
+  classId   String?
+  createdAt DateTime @default(now())
+
+  author User   @relation(fields: [authorId], references: [id])
+  class  Class? @relation(fields: [classId], references: [id])
+}
+
+model TeacherLeave {
+  id           String    @id @default(cuid())
+  teacherId    String
+  fromDate     DateTime
+  toDate       DateTime
+  reason       String
+  leaveType    String    @default("CASUAL") // CASUAL | SICK | EARNED
+  status       String    @default("PENDING") // PENDING | APPROVED | REJECTED
+  substituteId String?
+  appliedAt    DateTime  @default(now())
+  reviewedBy   String?
+  reviewedAt   DateTime?
+  remarks      String?
+
+  teacher    User  @relation("TeacherLeaves", fields: [teacherId], references: [id])
+  substitute User? @relation("SubstituteLeaves", fields: [substituteId], references: [id])
+}
+
+model StudyMaterial {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  fileUrl     String
+  classId     String?
+  subjectId   String?
+  teacherId   String
+  isPublic    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  teacher  User     @relation(fields: [teacherId], references: [id])
+  subject  Subject? @relation(fields: [subjectId], references: [id])
+}
+
+model PTMSlot {
+  id          String   @id @default(cuid())
+  classId     String
+  teacherId   String
+  date        DateTime
+  startTime   String   // "HH:MM"
+  duration    Int      @default(15) // minutes
+  parentName  String?
+  studentId   String?
+  status      String   @default("AVAILABLE") // AVAILABLE | BOOKED | COMPLETED
+  notes       String?
+  createdAt   DateTime @default(now())
+
+  class   Class    @relation(fields: [classId], references: [id])
+  teacher User     @relation(fields: [teacherId], references: [id])
+  student Student? @relation(fields: [studentId], references: [id])
 }

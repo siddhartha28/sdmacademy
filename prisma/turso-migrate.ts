@@ -15,6 +15,137 @@ if (!url || !authToken) {
 
 const db = createClient({ url, authToken });
 
+const newTables = `
+CREATE TABLE IF NOT EXISTS "TeacherAssignment" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "teacherId" TEXT NOT NULL,
+  "classId" TEXT NOT NULL,
+  "subjectId" TEXT,
+  "isClassTeacher" BOOLEAN NOT NULL DEFAULT false,
+  "academicYear" TEXT NOT NULL DEFAULT '2025-26',
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "TeacherAssignment_teacherId_fkey" FOREIGN KEY ("teacherId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT "TeacherAssignment_classId_fkey" FOREIGN KEY ("classId") REFERENCES "Class" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT "TeacherAssignment_subjectId_fkey" FOREIGN KEY ("subjectId") REFERENCES "Subject" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
+  UNIQUE ("teacherId", "classId", "subjectId", "academicYear")
+);
+
+CREATE TABLE IF NOT EXISTS "BehaviourRemark" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "studentId" TEXT NOT NULL,
+  "teacherId" TEXT NOT NULL,
+  "remark" TEXT NOT NULL,
+  "type" TEXT NOT NULL DEFAULT 'GENERAL',
+  "date" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "BehaviourRemark_studentId_fkey" FOREIGN KEY ("studentId") REFERENCES "Student" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT "BehaviourRemark_teacherId_fkey" FOREIGN KEY ("teacherId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS "Homework" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "title" TEXT NOT NULL,
+  "description" TEXT,
+  "classId" TEXT NOT NULL,
+  "subjectId" TEXT NOT NULL,
+  "teacherId" TEXT NOT NULL,
+  "dueDate" DATETIME NOT NULL,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "Homework_classId_fkey" FOREIGN KEY ("classId") REFERENCES "Class" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT "Homework_subjectId_fkey" FOREIGN KEY ("subjectId") REFERENCES "Subject" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT "Homework_teacherId_fkey" FOREIGN KEY ("teacherId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS "HomeworkSubmission" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "homeworkId" TEXT NOT NULL,
+  "studentId" TEXT NOT NULL,
+  "status" TEXT NOT NULL DEFAULT 'PENDING',
+  "marks" REAL,
+  "remarks" TEXT,
+  "submittedAt" DATETIME,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "HomeworkSubmission_homeworkId_fkey" FOREIGN KEY ("homeworkId") REFERENCES "Homework" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT "HomeworkSubmission_studentId_fkey" FOREIGN KEY ("studentId") REFERENCES "Student" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+  UNIQUE ("homeworkId", "studentId")
+);
+
+CREATE TABLE IF NOT EXISTS "LessonPlan" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "teacherId" TEXT NOT NULL,
+  "classId" TEXT NOT NULL,
+  "subjectId" TEXT NOT NULL,
+  "topic" TEXT NOT NULL,
+  "description" TEXT,
+  "date" DATETIME NOT NULL,
+  "duration" INTEGER,
+  "status" TEXT NOT NULL DEFAULT 'PLANNED',
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "LessonPlan_teacherId_fkey" FOREIGN KEY ("teacherId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT "LessonPlan_classId_fkey" FOREIGN KEY ("classId") REFERENCES "Class" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT "LessonPlan_subjectId_fkey" FOREIGN KEY ("subjectId") REFERENCES "Subject" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS "Announcement" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "title" TEXT NOT NULL,
+  "content" TEXT NOT NULL,
+  "authorId" TEXT NOT NULL,
+  "scope" TEXT NOT NULL DEFAULT 'CLASS',
+  "classId" TEXT,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "Announcement_authorId_fkey" FOREIGN KEY ("authorId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT "Announcement_classId_fkey" FOREIGN KEY ("classId") REFERENCES "Class" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS "TeacherLeave" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "teacherId" TEXT NOT NULL,
+  "fromDate" DATETIME NOT NULL,
+  "toDate" DATETIME NOT NULL,
+  "reason" TEXT NOT NULL,
+  "leaveType" TEXT NOT NULL DEFAULT 'CASUAL',
+  "status" TEXT NOT NULL DEFAULT 'PENDING',
+  "substituteId" TEXT,
+  "appliedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "reviewedBy" TEXT,
+  "reviewedAt" DATETIME,
+  "remarks" TEXT,
+  CONSTRAINT "TeacherLeave_teacherId_fkey" FOREIGN KEY ("teacherId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT "TeacherLeave_substituteId_fkey" FOREIGN KEY ("substituteId") REFERENCES "User" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS "StudyMaterial" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "title" TEXT NOT NULL,
+  "description" TEXT,
+  "fileUrl" TEXT NOT NULL,
+  "classId" TEXT,
+  "subjectId" TEXT,
+  "teacherId" TEXT NOT NULL,
+  "isPublic" BOOLEAN NOT NULL DEFAULT true,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "StudyMaterial_teacherId_fkey" FOREIGN KEY ("teacherId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT "StudyMaterial_subjectId_fkey" FOREIGN KEY ("subjectId") REFERENCES "Subject" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS "PTMSlot" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "classId" TEXT NOT NULL,
+  "teacherId" TEXT NOT NULL,
+  "date" DATETIME NOT NULL,
+  "startTime" TEXT NOT NULL,
+  "duration" INTEGER NOT NULL DEFAULT 15,
+  "parentName" TEXT,
+  "studentId" TEXT,
+  "status" TEXT NOT NULL DEFAULT 'AVAILABLE',
+  "notes" TEXT,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "PTMSlot_classId_fkey" FOREIGN KEY ("classId") REFERENCES "Class" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT "PTMSlot_teacherId_fkey" FOREIGN KEY ("teacherId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT "PTMSlot_studentId_fkey" FOREIGN KEY ("studentId") REFERENCES "Student" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+);
+`.trim();
+
 const statements = `
 CREATE TABLE IF NOT EXISTS "AcademicYear" (
   "id" TEXT NOT NULL PRIMARY KEY,
@@ -224,6 +355,25 @@ async function main() {
   console.log("🔧 Pushing schema to Turso...");
   console.log(`   URL: ${url.substring(0, 40)}...`);
 
+  // First push new tables only
+  console.log("\n📦 Adding new teacher portal tables...");
+  const newSqls = newTables.split(";\n\n").map((s) => s.trim()).filter(Boolean);
+  for (const sql of newSqls) {
+    const tableName = sql.match(/CREATE TABLE IF NOT EXISTS "(\w+)"/)?.[1] ?? "?";
+    try {
+      await db.execute(sql);
+      console.log(`  ✅ ${tableName}`);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (msg.includes("already exists")) {
+        console.log(`  ⏭  ${tableName} (already exists)`);
+      } else {
+        console.log(`  ❌ ${tableName}: ${msg}`);
+      }
+    }
+  }
+
+  console.log("\n📦 Ensuring base tables...");
   const sqls = statements.split(";\n\n").map((s) => s.trim()).filter(Boolean);
 
   let ok = 0;

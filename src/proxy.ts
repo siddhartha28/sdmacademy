@@ -26,7 +26,7 @@ export async function proxy(req: NextRequest) {
 
     // Teachers can only access their own routes
     if (user.role === "TEACHER" && pathname.startsWith("/dashboard/admin")) {
-      return NextResponse.redirect(new URL("/dashboard/teacher/attendance", req.url));
+      return NextResponse.redirect(new URL("/dashboard/teacher", req.url));
     }
 
     // Non-principals cannot access principal routes
