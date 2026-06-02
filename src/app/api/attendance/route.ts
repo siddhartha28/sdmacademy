@@ -35,17 +35,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing fields" }, { status: 400 });
   }
 
-  // Check lock time — teachers cannot submit after lock hour
-  const now = new Date();
-  const isToday = date === now.toISOString().split("T")[0];
-  const isLocked = isToday && now.getHours() >= LOCK_HOUR && user.role === "TEACHER";
-
-  if (isLocked) {
-    return NextResponse.json(
-      { error: `Attendance is locked after ${LOCK_HOUR}:00 AM` },
-      { status: 403 }
-    );
-  }
+  // 10 AM lock disabled — will be enabled in final version
+  // const now = new Date();
+  // const isToday = date === now.toISOString().split("T")[0];
+  // const isLocked = isToday && now.getHours() >= LOCK_HOUR && user.role === "TEACHER";
+  // if (isLocked) {
+  //   return NextResponse.json({ error: `Attendance is locked after ${LOCK_HOUR}:00 AM` }, { status: 403 });
+  // }
 
   // Upsert attendance
   const attendance = await prisma.attendance.upsert({
