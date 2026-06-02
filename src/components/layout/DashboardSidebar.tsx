@@ -4,11 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Users, ClipboardList, BookOpen,
-  DollarSign, Bell, Image, LogOut, UserCheck,
+  Bell, Image, LogOut, UserCheck,
   BarChart3, X, FileText, Calendar, MessageSquare,
   FolderOpen, BookMarked, CalendarClock, Award,
   CheckSquare, TrendingUp, GraduationCap, Settings,
-  FileBarChart, ShieldCheck, AlertCircle,
+  FileBarChart, ShieldCheck, AlertCircle, IndianRupee,
+  ShoppingCart, BadgePercent, Library, UserPlus,
+  Bus, BarChart2,
 } from "lucide-react";
 import NextImage from "next/image";
 import { cn } from "@/lib/utils";
@@ -19,13 +21,12 @@ interface SidebarProps {
   onClose?: () => void;
 }
 
-function NavItem({ href, icon: Icon, label, active, onClick, badge }: {
+function NavItem({ href, icon: Icon, label, active, onClick }: {
   href: string;
   icon: React.ComponentType<{ size?: number; className?: string }>;
   label: string;
   active: boolean;
   onClick?: () => void;
-  badge?: number;
 }) {
   return (
     <Link
@@ -40,11 +41,6 @@ function NavItem({ href, icon: Icon, label, active, onClick, badge }: {
     >
       <Icon size={18} className="flex-shrink-0" />
       <span className="flex-1 min-w-0 truncate">{label}</span>
-      {badge !== undefined && badge > 0 && (
-        <span className="bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
-          {badge}
-        </span>
-      )}
     </Link>
   );
 }
@@ -62,6 +58,7 @@ export default function DashboardSidebar({ user, onClose }: SidebarProps) {
   const isAdmin = user.role === "ADMIN";
   const isPrincipal = user.role === "PRINCIPAL";
   const isTeacher = user.role === "TEACHER";
+  const isAccounts = user.role === "ACCOUNTS";
 
   const active = (href: string, exact = false) =>
     exact ? pathname === href : pathname === href || pathname.startsWith(href + "/");
@@ -93,7 +90,7 @@ export default function DashboardSidebar({ user, onClose }: SidebarProps) {
       label: "Administration",
       links: [
         { href: "/dashboard/principal/approvals", label: "Approvals Center", icon: CheckSquare },
-        { href: "/dashboard/principal/fees", label: "Fee Management", icon: DollarSign },
+        { href: "/dashboard/principal/fees", label: "Fee Overview", icon: IndianRupee },
         { href: "/dashboard/principal/communication", label: "Communication", icon: MessageSquare },
         { href: "/dashboard/principal/events", label: "Events & Calendar", icon: Calendar },
       ],
@@ -109,28 +106,84 @@ export default function DashboardSidebar({ user, onClose }: SidebarProps) {
   // ─── ADMIN NAV ────────────────────────────────────────────────────────────
   const adminNav = [
     {
-      label: "Management",
+      label: "Dashboard",
+      links: [
+        { href: "/dashboard/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
+      ],
+    },
+    {
+      label: "Students",
       links: [
         { href: "/dashboard/admin/students", label: "Students", icon: Users },
-        { href: "/dashboard/admin/teachers", label: "Teachers", icon: UserCheck },
+        { href: "/dashboard/admin/attendance", label: "Attendance Reports", icon: ClipboardList },
+        { href: "/dashboard/admin/bulk-import", label: "Bulk Import", icon: FileText },
+      ],
+    },
+    {
+      label: "Staff",
+      links: [
+        { href: "/dashboard/admin/teachers", label: "Teachers & Staff", icon: UserCheck },
         { href: "/dashboard/admin/assignments", label: "Teacher Assignments", icon: Award },
-        { href: "/dashboard/admin/attendance", label: "Attendance", icon: ClipboardList },
-        { href: "/dashboard/admin/marks", label: "Marks & Results", icon: BookOpen },
-        { href: "/dashboard/admin/fees", label: "Fee Management", icon: DollarSign },
+        { href: "/dashboard/admin/leave", label: "Leave Records", icon: CalendarClock },
+      ],
+    },
+    {
+      label: "Academics",
+      links: [
+        { href: "/dashboard/admin/classes", label: "Classes & Sections", icon: BookOpen },
+        { href: "/dashboard/admin/subjects", label: "Subjects", icon: BookMarked },
       ],
     },
     {
       label: "Content",
       links: [
-        { href: "/dashboard/admin/notices", label: "Notices", icon: Bell },
+        { href: "/dashboard/admin/notices", label: "Notices & Circulars", icon: Bell },
         { href: "/dashboard/admin/gallery", label: "Gallery & Media", icon: Image },
+        { href: "/dashboard/admin/events", label: "Events & Calendar", icon: Calendar },
       ],
     },
     {
-      label: "Admin",
+      label: "Operations",
       links: [
-        { href: "/dashboard/admin/leave", label: "Leave Approvals", icon: CalendarClock },
+        { href: "/dashboard/admin/library", label: "Library", icon: Library },
+        { href: "/dashboard/admin/complaints", label: "Complaints", icon: AlertCircle },
+      ],
+    },
+    {
+      label: "System",
+      links: [
+        { href: "/dashboard/admin/users", label: "User Accounts", icon: UserPlus },
         { href: "/dashboard/admin/settings", label: "Settings", icon: Settings },
+      ],
+    },
+  ];
+
+  // ─── ACCOUNTS NAV ─────────────────────────────────────────────────────────
+  const accountsNav = [
+    {
+      label: "Accounts Portal",
+      links: [
+        { href: "/dashboard/accounts", label: "Dashboard", icon: LayoutDashboard, exact: true },
+      ],
+    },
+    {
+      label: "Fee Management",
+      links: [
+        { href: "/dashboard/accounts/fees", label: "Fee Collection", icon: IndianRupee },
+        { href: "/dashboard/accounts/waivers", label: "Fee Waivers", icon: BadgePercent },
+      ],
+    },
+    {
+      label: "Finance",
+      links: [
+        { href: "/dashboard/accounts/expenses", label: "Expenses", icon: ShoppingCart },
+        { href: "/dashboard/accounts/payroll", label: "Payroll", icon: BarChart2 },
+      ],
+    },
+    {
+      label: "Reports",
+      links: [
+        { href: "/dashboard/accounts/reports", label: "Financial Reports", icon: FileBarChart },
       ],
     },
   ];
@@ -155,7 +208,7 @@ export default function DashboardSidebar({ user, onClose }: SidebarProps) {
     },
   ];
 
-  const nav = isPrincipal ? principalNav : isAdmin ? adminNav : teacherNav;
+  const nav = isPrincipal ? principalNav : isAdmin ? adminNav : isAccounts ? accountsNav : teacherNav;
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -166,11 +219,13 @@ export default function DashboardSidebar({ user, onClose }: SidebarProps) {
     PRINCIPAL: "text-amber-600 bg-amber-50",
     ADMIN: "text-primary-600 bg-primary-50",
     TEACHER: "text-green-600 bg-green-50",
+    ACCOUNTS: "text-orange-600 bg-orange-50",
   };
   const roleIcons: Record<string, React.ReactNode> = {
     PRINCIPAL: <ShieldCheck size={12} />,
     ADMIN: <AlertCircle size={12} />,
     TEACHER: <GraduationCap size={12} />,
+    ACCOUNTS: <IndianRupee size={12} />,
   };
 
   return (

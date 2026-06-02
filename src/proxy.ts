@@ -25,13 +25,24 @@ export async function proxy(req: NextRequest) {
     }
 
     // Teachers can only access their own routes
-    if (user.role === "TEACHER" && pathname.startsWith("/dashboard/admin")) {
+    if (user.role === "TEACHER" && (pathname.startsWith("/dashboard/admin") || pathname.startsWith("/dashboard/accounts") || pathname.startsWith("/dashboard/principal"))) {
       return NextResponse.redirect(new URL("/dashboard/teacher", req.url));
+    }
+
+    // Accounts staff can only access accounts routes
+    if (user.role === "ACCOUNTS" && (pathname.startsWith("/dashboard/admin") || pathname.startsWith("/dashboard/principal") || pathname.startsWith("/dashboard/teacher"))) {
+      return NextResponse.redirect(new URL("/dashboard/accounts", req.url));
     }
 
     // Non-principals cannot access principal routes
     if (pathname.startsWith("/dashboard/principal") && user.role !== "PRINCIPAL") {
       return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
+
+    // Block admin from financial data (belongs to accounts role)
+    const adminBlockedPaths = ["/dashboard/admin/fees"];
+    if (user.role === "ADMIN" && adminBlockedPaths.some((p) => pathname.startsWith(p))) {
+      return NextResponse.redirect(new URL("/dashboard/admin", req.url));
     }
 
     // Block principal from admin settings, marks entry, bulk import (view-only role)

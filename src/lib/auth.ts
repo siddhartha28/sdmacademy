@@ -10,7 +10,7 @@ export interface SessionUser {
   id: string;
   name: string;
   phone: string;
-  role: "PRINCIPAL" | "ADMIN" | "TEACHER";
+  role: "PRINCIPAL" | "ADMIN" | "TEACHER" | "ACCOUNTS";
   classId?: string | null;
 }
 

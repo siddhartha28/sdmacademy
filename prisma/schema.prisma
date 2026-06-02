@@ -12,7 +12,7 @@ model User {
   phone     String   @unique
   email     String?
   password  String
-  role      String   @default("TEACHER") // PRINCIPAL | ADMIN | TEACHER
+  role      String   @default("TEACHER") // PRINCIPAL | ADMIN | TEACHER | ACCOUNTS
   classId   String?  // legacy — kept for compatibility
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
@@ -29,6 +29,7 @@ model User {
   studyMaterials      StudyMaterial[]
   ptmSlots            PTMSlot[]
   behaviourRemarks    BehaviourRemark[]
+  salaryRecords       SalaryRecord[]
 }
 
 model AcademicYear {
@@ -92,6 +93,8 @@ model Student {
   behaviourRemarks     BehaviourRemark[]
   homeworkSubmissions  HomeworkSubmission[]
   ptmSlots             PTMSlot[]
+  feeWaivers           FeeWaiver[]
+  libraryIssues        LibraryIssue[]
 
   @@unique([sectionId, rollNo])
 }
@@ -393,4 +396,113 @@ model PTMSlot {
   class   Class    @relation(fields: [classId], references: [id])
   teacher User     @relation(fields: [teacherId], references: [id])
   student Student? @relation(fields: [studentId], references: [id])
+}
+
+// ─── Accounts & Operations Models ────────────────────────────────────────────
+
+model Expense {
+  id          String   @id @default(cuid())
+  title       String
+  category    String   @default("OTHER") // UTILITIES | MAINTENANCE | SUPPLIES | PETTY_CASH | TRANSPORT | SALARIES | OTHER
+  amount      Float
+  date        DateTime
+  description String?
+  vendorName  String?
+  invoiceNo   String?
+  paymentMode String   @default("CASH") // CASH | ONLINE | BANK_TRANSFER
+  createdBy   String
+  createdAt   DateTime @default(now())
+}
+
+model SalaryRecord {
+  id          String    @id @default(cuid())
+  teacherId   String
+  month       Int       // 1-12
+  year        Int
+  basicSalary Float
+  allowances  Float     @default(0)
+  deductions  Float     @default(0)
+  netSalary   Float
+  paymentDate DateTime?
+  status      String    @default("PENDING") // PENDING | PAID
+  remarks     String?
+  createdAt   DateTime  @default(now())
+
+  teacher User @relation(fields: [teacherId], references: [id])
+
+  @@unique([teacherId, month, year])
+}
+
+model FeeWaiver {
+  id          String    @id @default(cuid())
+  studentId   String
+  amount      Float
+  reason      String
+  type        String    @default("DISCOUNT") // DISCOUNT | SCHOLARSHIP | SIBLING | STAFF_WARD | OTHER
+  status      String    @default("PENDING") // PENDING | APPROVED | REJECTED
+  requestedBy String
+  approvedBy  String?
+  approvedAt  DateTime?
+  remarks     String?
+  createdAt   DateTime  @default(now())
+
+  student Student @relation(fields: [studentId], references: [id])
+}
+
+model LibraryBook {
+  id              String   @id @default(cuid())
+  title           String
+  author          String?
+  isbn            String?  @unique
+  subject         String?
+  publisher       String?
+  edition         String?
+  totalCopies     Int      @default(1)
+  availableCopies Int      @default(1)
+  createdAt       DateTime @default(now())
+
+  issues LibraryIssue[]
+}
+
+model LibraryIssue {
+  id         String    @id @default(cuid())
+  bookId     String
+  studentId  String?
+  issuedTo   String
+  issueDate  DateTime  @default(now())
+  dueDate    DateTime
+  returnDate DateTime?
+  fine       Float     @default(0)
+  status     String    @default("ISSUED") // ISSUED | RETURNED | OVERDUE
+
+  book    LibraryBook @relation(fields: [bookId], references: [id])
+  student Student?    @relation(fields: [studentId], references: [id])
+}
+
+model Complaint {
+  id              String   @id @default(cuid())
+  complainantName String
+  complainantType String   @default("PARENT") // PARENT | STUDENT | STAFF | OTHER
+  phone           String?
+  category        String   @default("OTHER") // ACADEMIC | FACILITY | STAFF | TRANSPORT | OTHER
+  description     String
+  status          String   @default("OPEN") // OPEN | IN_PROGRESS | RESOLVED | ESCALATED
+  assignedTo      String?
+  resolution      String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model BusRoute {
+  id          String   @id @default(cuid())
+  routeName   String   @unique
+  origin      String
+  destination String
+  stops       String
+  driverName  String?
+  driverPhone String?
+  vehicleNo   String?
+  fee         Float    @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
 }

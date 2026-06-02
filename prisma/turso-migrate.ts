@@ -15,6 +15,109 @@ if (!url || !authToken) {
 
 const db = createClient({ url, authToken });
 
+const accountsTables = `
+CREATE TABLE IF NOT EXISTS "Expense" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "title" TEXT NOT NULL,
+  "category" TEXT NOT NULL DEFAULT 'OTHER',
+  "amount" REAL NOT NULL,
+  "date" DATETIME NOT NULL,
+  "description" TEXT,
+  "vendorName" TEXT,
+  "invoiceNo" TEXT,
+  "paymentMode" TEXT NOT NULL DEFAULT 'CASH',
+  "createdBy" TEXT NOT NULL,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS "SalaryRecord" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "teacherId" TEXT NOT NULL,
+  "month" INTEGER NOT NULL,
+  "year" INTEGER NOT NULL,
+  "basicSalary" REAL NOT NULL,
+  "allowances" REAL NOT NULL DEFAULT 0,
+  "deductions" REAL NOT NULL DEFAULT 0,
+  "netSalary" REAL NOT NULL,
+  "paymentDate" DATETIME,
+  "status" TEXT NOT NULL DEFAULT 'PENDING',
+  "remarks" TEXT,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "SalaryRecord_teacherId_fkey" FOREIGN KEY ("teacherId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+  UNIQUE ("teacherId", "month", "year")
+);
+
+CREATE TABLE IF NOT EXISTS "FeeWaiver" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "studentId" TEXT NOT NULL,
+  "amount" REAL NOT NULL,
+  "reason" TEXT NOT NULL,
+  "type" TEXT NOT NULL DEFAULT 'DISCOUNT',
+  "status" TEXT NOT NULL DEFAULT 'PENDING',
+  "requestedBy" TEXT NOT NULL,
+  "approvedBy" TEXT,
+  "approvedAt" DATETIME,
+  "remarks" TEXT,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "FeeWaiver_studentId_fkey" FOREIGN KEY ("studentId") REFERENCES "Student" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS "LibraryBook" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "title" TEXT NOT NULL,
+  "author" TEXT,
+  "isbn" TEXT UNIQUE,
+  "subject" TEXT,
+  "publisher" TEXT,
+  "edition" TEXT,
+  "totalCopies" INTEGER NOT NULL DEFAULT 1,
+  "availableCopies" INTEGER NOT NULL DEFAULT 1,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS "LibraryIssue" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "bookId" TEXT NOT NULL,
+  "studentId" TEXT,
+  "issuedTo" TEXT NOT NULL,
+  "issueDate" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "dueDate" DATETIME NOT NULL,
+  "returnDate" DATETIME,
+  "fine" REAL NOT NULL DEFAULT 0,
+  "status" TEXT NOT NULL DEFAULT 'ISSUED',
+  CONSTRAINT "LibraryIssue_bookId_fkey" FOREIGN KEY ("bookId") REFERENCES "LibraryBook" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT "LibraryIssue_studentId_fkey" FOREIGN KEY ("studentId") REFERENCES "Student" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS "Complaint" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "complainantName" TEXT NOT NULL,
+  "complainantType" TEXT NOT NULL DEFAULT 'PARENT',
+  "phone" TEXT,
+  "category" TEXT NOT NULL DEFAULT 'OTHER',
+  "description" TEXT NOT NULL,
+  "status" TEXT NOT NULL DEFAULT 'OPEN',
+  "assignedTo" TEXT,
+  "resolution" TEXT,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS "BusRoute" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "routeName" TEXT NOT NULL UNIQUE,
+  "origin" TEXT NOT NULL,
+  "destination" TEXT NOT NULL,
+  "stops" TEXT NOT NULL,
+  "driverName" TEXT,
+  "driverPhone" TEXT,
+  "vehicleNo" TEXT,
+  "fee" REAL NOT NULL DEFAULT 0,
+  "isActive" BOOLEAN NOT NULL DEFAULT true,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+`.trim();
+
 const newTables = `
 CREATE TABLE IF NOT EXISTS "TeacherAssignment" (
   "id" TEXT NOT NULL PRIMARY KEY,
@@ -356,6 +459,23 @@ async function main() {
   console.log(`   URL: ${url.substring(0, 40)}...`);
 
   // First push new tables only
+  console.log("\n📦 Adding accounts & operations tables...");
+  const accountsSqls = accountsTables.split(";\n\n").map((s) => s.trim()).filter(Boolean);
+  for (const sql of accountsSqls) {
+    const tableName = sql.match(/CREATE TABLE IF NOT EXISTS "(\w+)"/)?.[1] ?? "?";
+    try {
+      await db.execute(sql);
+      console.log(`  ✅ ${tableName}`);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (msg.includes("already exists")) {
+        console.log(`  ⏭  ${tableName} (already exists)`);
+      } else {
+        console.log(`  ❌ ${tableName}: ${msg}`);
+      }
+    }
+  }
+
   console.log("\n📦 Adding new teacher portal tables...");
   const newSqls = newTables.split(";\n\n").map((s) => s.trim()).filter(Boolean);
   for (const sql of newSqls) {
