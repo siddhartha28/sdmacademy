@@ -33,6 +33,15 @@ export async function proxy(req: NextRequest) {
     if (pathname.startsWith("/dashboard/principal") && user.role !== "PRINCIPAL") {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
+
+    // Block principal from admin settings, marks entry, bulk import (view-only role)
+    const principalBlockedPaths = [
+      "/dashboard/admin/settings",
+      "/dashboard/admin/bulk-import",
+    ];
+    if (user.role === "PRINCIPAL" && principalBlockedPaths.some((p) => pathname.startsWith(p))) {
+      return NextResponse.redirect(new URL("/dashboard/principal", req.url));
+    }
   }
 
   return NextResponse.next();
