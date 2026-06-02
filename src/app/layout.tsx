@@ -10,6 +10,10 @@ export const metadata: Metadata = {
   description:
     "S.D.M. Academy Shaulana — UP Board affiliated school, Classes Play to 8. Established 2006.",
   keywords: "SDM Academy, Shaulana, Dhaulana, Hapur, UP Board, School",
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

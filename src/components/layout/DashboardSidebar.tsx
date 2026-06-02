@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  GraduationCap, LayoutDashboard, Users, ClipboardList, BookOpen,
+  LayoutDashboard, Users, ClipboardList, BookOpen,
   DollarSign, Bell, Image, Settings, LogOut, UserCheck, BarChart3, X,
 } from "lucide-react";
+import NextImage from "next/image";
 import { cn } from "@/lib/utils";
 import type { SessionUser } from "@/lib/auth";
 
@@ -80,9 +81,7 @@ export default function DashboardSidebar({ user, onClose }: SidebarProps) {
       {/* Logo */}
       <div className="flex items-center justify-between px-4 py-4 border-b border-gray-100">
         <div className="flex items-center gap-2.5">
-          <div className="bg-primary-500 text-white p-1.5 rounded-lg flex-shrink-0">
-            <GraduationCap size={18} />
-          </div>
+          <NextImage src="/logo.png" alt="SDM Academy" width={36} height={36} className="rounded-full flex-shrink-0" />
           <div>
             <div className="font-bold text-gray-900 text-sm leading-tight">SDM Academy</div>
             <div className="text-xs text-gray-400">ERP Portal</div>

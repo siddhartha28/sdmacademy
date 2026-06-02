@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Menu, X, GraduationCap } from "lucide-react";
+import { Menu, X } from "lucide-react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
@@ -27,9 +28,7 @@ export default function PublicNavbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="bg-primary-500 text-white p-1.5 rounded-lg">
-              <GraduationCap size={22} />
-            </div>
+            <Image src="/logo.png" alt="SDM Academy Logo" width={44} height={44} className="rounded-full" priority />
             <div className="hidden sm:block">
               <div className="font-bold text-gray-900 text-sm leading-tight">S.D.M. Academy</div>
               <div className="text-xs text-gray-500 leading-tight">Shaulana · Est. 2006</div>

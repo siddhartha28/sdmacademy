@@ -1,6 +1,7 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
-  BookOpen, Users, Award, GraduationCap, ChevronRight,
+  BookOpen, Users, Award, ChevronRight,
   ClipboardCheck, DollarSign, BarChart3, Bell,
 } from "lucide-react";
 import { SCHOOL_INFO } from "@/lib/constants";
@@ -13,9 +14,11 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-gradient-to-br from-primary-800 to-primary-950 opacity-90" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-20 sm:py-28">
           <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 bg-primary-700/60 border border-primary-600/40 text-primary-200 px-3 py-1.5 rounded-full text-sm font-medium mb-6">
-              <GraduationCap size={14} />
-              UP Board Affiliated · Est. {SCHOOL_INFO.established}
+            <div className="flex items-center gap-4 mb-6">
+              <Image src="/logo.png" alt="SDM Academy Logo" width={80} height={80} className="rounded-full border-4 border-white/20 shadow-xl flex-shrink-0" />
+              <div className="inline-flex items-center gap-2 bg-primary-700/60 border border-primary-600/40 text-primary-200 px-3 py-1.5 rounded-full text-sm font-medium">
+                UP Board Affiliated · Est. {SCHOOL_INFO.established}
+              </div>
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-4">
               {SCHOOL_INFO.name}

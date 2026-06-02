@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { GraduationCap, Phone, Lock, Eye, EyeOff } from "lucide-react";
+import { Phone, Lock, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function LoginPage() {
   const [phone, setPhone] = useState("");
@@ -55,8 +56,8 @@ export default function LoginPage() {
         <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
           {/* Header */}
           <div className="bg-primary-600 px-8 py-7 text-white text-center">
-            <div className="bg-white/20 w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3">
-              <GraduationCap size={28} />
+            <div className="flex justify-center mb-3">
+              <Image src="/logo.png" alt="SDM Academy Logo" width={80} height={80} className="rounded-full border-4 border-white/30 shadow-lg" />
             </div>
             <h1 className="text-xl font-bold">S.D.M. Academy</h1>
             <p className="text-primary-200 text-sm mt-1">Staff Portal Login</p>
