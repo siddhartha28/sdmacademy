@@ -14,6 +14,22 @@ interface Student {
   rollNo: string;
   name: string;
   gender?: string;
+  photoUrl?: string;
+}
+
+// Consistent avatar color per student name
+const AVATAR_COLORS = [
+  "bg-blue-500", "bg-violet-500", "bg-rose-500", "bg-amber-500",
+  "bg-teal-500", "bg-indigo-500", "bg-pink-500", "bg-cyan-500",
+  "bg-orange-500", "bg-lime-600",
+];
+function avatarColor(name: string) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+function initials(name: string) {
+  return name.split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase();
 }
 
 interface AttendanceRecord {
@@ -127,8 +143,11 @@ export default function TeacherAttendancePage() {
       fetch(`/api/attendance?date=${date}&sectionId=${sectionId}`).then((r) => r.json()),
     ])
       .then(([studentData, attendanceData]) => {
-        const studs: Student[] = studentData.students || [];
-        setStudents(studs.sort((a, b) => Number(a.rollNo) - Number(b.rollNo)));
+        // Sort alphabetically — roll number = position in alphabetical order
+        const studs: Student[] = (studentData.students || [])
+          .sort((a: Student, b: Student) => a.name.localeCompare(b.name))
+          .map((s: Student, i: number) => ({ ...s, rollNo: String(i + 1).padStart(2, "0") }));
+        setStudents(studs);
 
         const map = new Map<string, Status>();
         studs.forEach((s) => map.set(s.id, "PRESENT")); // default all present
@@ -268,14 +287,31 @@ export default function TeacherAttendancePage() {
             const status = (records.get(student.id) || "PRESENT") as Status;
             const cfg = STATUS_CONFIG[status];
 
+            const color = avatarColor(student.name);
+
             return (
               <div
                 key={student.id}
-                className={`border rounded-xl px-4 py-3 flex items-center gap-3 transition-all ${cfg.rowBg} ${cfg.rowBorder}`}
+                className={`border rounded-xl px-3 sm:px-4 py-3 flex items-center gap-3 transition-all ${cfg.rowBg} ${cfg.rowBorder}`}
               >
-                {/* Roll number badge */}
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${cfg.bg} text-white`}>
-                  {student.rollNo}
+                {/* Avatar — photo or initials placeholder */}
+                <div className="relative flex-shrink-0">
+                  {student.photoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={student.photoUrl}
+                      alt={student.name}
+                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-white shadow-sm"
+                    />
+                  ) : (
+                    <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white font-bold text-sm sm:text-base shadow-sm border-2 border-white ${color}`}>
+                      {initials(student.name)}
+                    </div>
+                  )}
+                  {/* Roll no badge */}
+                  <span className="absolute -bottom-1 -right-1 bg-white border border-gray-200 text-gray-600 text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center shadow-sm leading-none">
+                    {student.rollNo}
+                  </span>
                 </div>
 
                 {/* Name */}
@@ -290,7 +326,7 @@ export default function TeacherAttendancePage() {
                     {cfg.short}
                   </span>
                 ) : (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 sm:gap-2">
                     {(["PRESENT", "ABSENT", "LATE"] as Status[]).map((s) => (
                       <StatusCircle
                         key={s}
