@@ -50,20 +50,24 @@ export default function DashboardSidebar({ user, onClose }: SidebarProps) {
   const isAdmin = user.role === "ADMIN" || user.role === "PRINCIPAL";
   const isPrincipal = user.role === "PRINCIPAL";
 
+  // Common admin links (Admin + Principal)
   const adminLinks = [
-    { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
     { href: "/dashboard/admin/students", label: "Students", icon: Users },
     { href: "/dashboard/admin/teachers", label: "Teachers", icon: UserCheck },
     { href: "/dashboard/admin/attendance", label: "Attendance", icon: ClipboardList },
-    { href: "/dashboard/admin/marks", label: "Marks & Results", icon: BookOpen },
     { href: "/dashboard/admin/fees", label: "Fee Management", icon: DollarSign },
     { href: "/dashboard/admin/notices", label: "Notices", icon: Bell },
     { href: "/dashboard/admin/gallery", label: "Gallery & Media", icon: Image },
     { href: "/dashboard/admin/settings", label: "Settings", icon: Settings },
   ];
 
+  // Principal-only links
+  const principalOnlyLinks = [
+    { href: "/dashboard/admin/marks", label: "Marks & Results", icon: BookOpen },
+  ];
+
   const principalLinks = [
-    { href: "/dashboard/principal", label: "Dashboard", icon: BarChart3 },
+    { href: "/dashboard/principal", label: "Analytics", icon: BarChart3 },
   ];
 
   const teacherLinks = [
@@ -127,6 +131,21 @@ export default function DashboardSidebar({ user, onClose }: SidebarProps) {
               onClick={onClose}
             />
           ))}
+
+        {isPrincipal && (
+          <>
+            <div className="my-2 border-t border-gray-100" />
+            <p className="px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Academics</p>
+            {principalOnlyLinks.map((link) => (
+              <NavItem
+                key={link.href}
+                {...link}
+                active={pathname === link.href || pathname.startsWith(link.href + "/")}
+                onClick={onClose}
+              />
+            ))}
+          </>
+        )}
 
         {user.role === "TEACHER" && (
           <>

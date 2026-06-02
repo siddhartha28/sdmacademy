@@ -11,36 +11,55 @@ export async function GET(req: NextRequest) {
   const type = searchParams.get("type");
 
   if (type === "overview") {
-    const [totalStudents, totalTeachers, totalFeeThisMonth, todayAttendance] = await Promise.all([
+    const today = new Date().toISOString().split("T")[0];
+    const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+
+    const [totalStudents, totalTeachers, totalFeeThisMonth, todayAttendance, totalNotices] = await Promise.all([
       prisma.student.count({ where: { status: "ACTIVE" } }),
-      prisma.user.count({ where: { isActive: true } }),
+      prisma.user.count({ where: { isActive: true, role: "TEACHER" } }),
       prisma.feePayment.aggregate({
-        where: {
-          paymentDate: {
-            gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-          },
-        },
+        where: { paymentDate: { gte: monthStart } },
         _sum: { amount: true },
       }),
       prisma.attendance.findMany({
-        where: { date: new Date().toISOString().split("T")[0] },
+        where: { date: today },
         include: {
           _count: { select: { records: true } },
-          records: { where: { status: "PRESENT" } },
+          records: { where: { status: { in: ["PRESENT", "LATE"] } } },
         },
       }),
+      prisma.notice.count({ where: { isPublished: true } }),
     ]);
 
     const totalPresent = todayAttendance.reduce((sum, a) => sum + a.records.length, 0);
     const totalRecords = todayAttendance.reduce((sum, a) => sum + a._count.records, 0);
 
+    // Class-wise student counts
+    const classCounts = await prisma.class.findMany({
+      orderBy: { order: "asc" },
+      include: {
+        sections: {
+          include: { _count: { select: { students: { where: { status: "ACTIVE" } } } } },
+        },
+      },
+    });
+
+    const studentsByClass = classCounts.map((c) => ({
+      name: c.name,
+      count: c.sections.reduce((sum, s) => sum + s._count.students, 0),
+    })).filter((c) => c.count > 0);
+
     return NextResponse.json({
       totalStudents,
       totalTeachers,
+      totalNotices,
       feeCollectedThisMonth: totalFeeThisMonth._sum.amount || 0,
       todayAttendancePercent: totalRecords
         ? Math.round((totalPresent / totalRecords) * 100)
         : null,
+      todayPresent: totalPresent,
+      todayTotal: totalRecords,
+      studentsByClass,
     });
   }
 
@@ -63,16 +82,23 @@ export async function GET(req: NextRequest) {
       orderBy: { date: "asc" },
     });
 
-    const trend = attendances.map((a) => {
+    // Aggregate multiple sections per day into one data point
+    const byDate = new Map<string, { total: number; present: number }>();
+    for (const a of attendances) {
       const total = a.records.length;
       const present = a.records.filter((r) => r.status === "PRESENT" || r.status === "LATE").length;
-      return {
-        date: a.date,
+      const existing = byDate.get(a.date) || { total: 0, present: 0 };
+      byDate.set(a.date, { total: existing.total + total, present: existing.present + present });
+    }
+
+    const trend = Array.from(byDate.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, { total, present }]) => ({
+        date,
         percent: total ? Math.round((present / total) * 100) : 0,
         total,
         present,
-      };
-    });
+      }));
 
     return NextResponse.json({ trend });
   }
