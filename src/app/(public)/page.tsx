@@ -138,6 +138,50 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Principal's Desk */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
+        <div className="bg-primary-900 rounded-3xl overflow-hidden shadow-xl">
+          <div className="flex flex-col md:flex-row items-stretch">
+            {/* Photo */}
+            <div className="relative w-full md:w-72 h-72 md:h-auto flex-shrink-0">
+              <Image
+                src="/principal.jpg"
+                alt="Ms. Mansi Sharma — Principal"
+                fill
+                className="object-cover object-top"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-primary-900/60 via-transparent to-transparent md:bg-gradient-to-r md:from-transparent md:to-primary-900/40" />
+            </div>
+
+            {/* Message */}
+            <div className="flex-1 px-8 py-10 md:py-12 flex flex-col justify-center">
+              <span className="text-primary-300 text-xs font-bold uppercase tracking-widest mb-3">Principal&apos;s Desk</span>
+              <blockquote className="text-white text-lg md:text-xl leading-relaxed italic mb-6">
+                &ldquo;At S.D.M. Academy, we believe every child carries the light of potential within them.
+                Our role as educators is to fan that flame — through dedicated teaching, a safe and
+                encouraging environment, and by instilling values that go beyond textbooks.
+                We welcome you to our school family.&rdquo;
+              </blockquote>
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-0.5 bg-primary-400" />
+                <div>
+                  <div className="text-white font-bold">Ms. Mansi Sharma</div>
+                  <div className="text-primary-300 text-sm">Principal, S.D.M. Academy Shaulana</div>
+                </div>
+              </div>
+              <div className="mt-6">
+                <Link
+                  href="/about"
+                  className="inline-flex items-center gap-2 text-primary-300 hover:text-white text-sm font-medium transition-colors"
+                >
+                  Read more about us <ChevronRight size={16} />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ERP Features Preview */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
         <div className="text-center mb-10">

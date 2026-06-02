@@ -5,7 +5,7 @@ import { CheckSquare, Clock, AlertCircle } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
 import { toast } from "sonner";
-import { isAfterLockTime, todayString } from "@/lib/utils";
+import { todayString } from "@/lib/utils";
 
 type Status = "PRESENT" | "ABSENT" | "LATE";
 
@@ -95,7 +95,7 @@ export default function TeacherAttendancePage() {
   const [sectionName, setSectionName] = useState("");
   const [user, setUser]             = useState<{ classId?: string | null; name: string } | null>(null);
 
-  const isLocked = isAfterLockTime() && date === todayString();
+  const isLocked = false; // 10 AM lock disabled — will be enabled in final version
 
   // Load teacher's class
   useEffect(() => {
