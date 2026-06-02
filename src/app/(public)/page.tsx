@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import {
-  BookOpen, Users, Award, ChevronRight,
+  BookOpen, Users, Award, GraduationCap, ChevronRight,
   ClipboardCheck, DollarSign, BarChart3, Bell,
 } from "lucide-react";
 import { SCHOOL_INFO } from "@/lib/constants";
